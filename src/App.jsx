@@ -17,7 +17,7 @@ const BUTTONS = [
   { type: "operation", keyName: 'divide', label: '÷' },
   { type: "operation", keyName: 'add', label: '+' },
   { type: "operation", keyName: 'subtract', label: '-' },
-  { type: "operation", keyName: 'dot', label: '.' },
+  { type: "dot", keyName: 'dot', label: '.' },
   { type: "operation", keyName: 'evaluate', label: '=' },
 ];
 
@@ -42,7 +42,7 @@ export default function App() {
 
   const handleClick = ({type, keyName, label}) => {
     if (keyName === 'evaluate') {
-      setQuery((prev) => [evaluateResult(prev)])
+      setQuery([{type: 'number', label: evaluateResult(), result: true}])
       return
     }
     if (keyName === 'clear') {
@@ -53,28 +53,68 @@ export default function App() {
       setQuery((prev) => prev.slice(0, -1))
       return
     }
+    if (keyName === 'multiply' || keyName === 'divide' || keyName === 'add') {
+      if (query.length === 0 || query[query.length - 1].type === 'operation') {
+        return
+      }
+    }
+    if (keyName === 'subtract') {
+      if (query[query.length - 1]?.keyName === 'subtract') {
+        return
+      }
+    }
+    if (keyName === 'dot') {
+      if (query.length === 1 && query[0].result) {
+        setQuery([])
+      }
+      let seenDot = false
+      let seenOperator = false
+      let dotIsValid = true
+      query.slice().reverse().forEach((item) => {
+        if (item.keyName === 'dot') {
+          seenDot = true
+        }
+        if (item.type === 'operation') {
+          seenOperator = true
+        }
+        console.log('seenDot', seenDot)
+        console.log('seenOperator', seenOperator)
+        if (seenDot !== seenOperator) {
+          dotIsValid = !seenDot
+        }
+      })
+      if (!dotIsValid) {
+        return
+      }
+    }
+    if (type === 'number') {
+      if (query.length === 1 && query[0].result) {
+        setQuery([])
+      }
+    }
     setQuery((prev) => [...prev, {type, keyName, label}])
   }
 
-  const evaluateResult = (query) => {
-    return query.join('')
+  const evaluateResult = () => {
+    const string = query.reduce((acc, cur) => acc += cur.label, '').replace('×','*').replace('÷','/')
+    console.log('string', string)
+    try {
+      const sum = eval(string).toString()
+      return sum
+    } 
+    catch (error) {
+      return '0'
+    }
   }
 
   const stringifyResult = () => {
     if (query.length === 0) {
-      return 0
+      return '0'
     }
-    let result = ''
-    let prev = undefined
-    query.forEach((entry, index) => {
-      if (index > 0 && (entry.type !== 'number' || prev.type !=='number')) {
-        result += ' '
-      }
-      result += entry.label
-      prev = entry
-    })
-    return result
+    return query.reduce((acc, cur) => acc += cur.label, '')
   }
+  
+  console.log('query', query)
 
   return (
     <div className="calculator">
