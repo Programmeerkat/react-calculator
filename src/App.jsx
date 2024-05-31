@@ -23,7 +23,7 @@ const BUTTONS = [
 
 function Button({ keyName, label, onClick }) {
   return (
-    <button style={{ gridArea: keyName }} className={`button ${keyName}`} onClick={onClick}>
+    <button style={{ gridArea: keyName }} className={`button ${keyName}`} onMouseDown={onClick}>
       {label}
     </button>
   );
@@ -77,8 +77,6 @@ export default function App() {
         if (item.type === 'operation') {
           seenOperator = true
         }
-        console.log('seenDot', seenDot)
-        console.log('seenOperator', seenOperator)
         if (seenDot !== seenOperator) {
           dotIsValid = !seenDot
         }
@@ -97,10 +95,8 @@ export default function App() {
 
   const evaluateResult = () => {
     const string = query.reduce((acc, cur) => acc += cur.label, '').replace('×','*').replace('÷','/')
-    console.log('string', string)
     try {
-      const sum = eval(string).toString()
-      return sum
+      return eval(string).toString()
     } 
     catch (error) {
       return '0'
@@ -113,14 +109,12 @@ export default function App() {
     }
     return query.reduce((acc, cur) => acc += cur.label, '')
   }
-  
-  console.log('query', query)
 
   return (
     <div className="calculator">
       <Screen value={stringifyResult()} />
-      {BUTTONS.map((button) => (
-        <Button key={button.keyName} keyName={button.keyName} label={button.label} onClick={() => handleClick({ type: button.type, keyName: button.keyName, label: button.label })} />
+      {BUTTONS.map(({ type, keyName, label }) => (
+        <Button key={keyName} keyName={keyName} label={label} onClick={() => handleClick({ type, keyName, label })} />
       ))}
     </div>
   );
