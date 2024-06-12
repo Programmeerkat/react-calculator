@@ -1,33 +1,38 @@
-import { useState } from 'react'
+import { useEffect, useState, useRef, forwardRef } from 'react'
 
 const BUTTONS = [
-  { type: "operation", keyName: 'clear', label: 'C' },
-  { type: "operation", keyName: 'delete', label: '←' },
-  { type: "number", keyName: 'number1', label: '1' },
-  { type: "number", keyName: 'number2', label: '2' },
-  { type: "number", keyName: 'number3', label: '3' },
-  { type: "number", keyName: 'number4', label: '4' },
-  { type: "number", keyName: 'number5', label: '5' },
-  { type: "number", keyName: 'number6', label: '6' },
-  { type: "number", keyName: 'number7', label: '7' },
-  { type: "number", keyName: 'number8', label: '8' },
-  { type: "number", keyName: 'number9', label: '9' },
-  { type: "number", keyName: 'number0', label: '0' },
-  { type: "operation", keyName: 'multiply', label: '×' },
-  { type: "operation", keyName: 'divide', label: '÷' },
-  { type: "operation", keyName: 'add', label: '+' },
-  { type: "operation", keyName: 'subtract', label: '-' },
-  { type: "dot", keyName: 'dot', label: '.' },
-  { type: "operation", keyName: 'evaluate', label: '=' },
+  { type: "number", keyName: 'number1', label: '1', keyPress: '1'},
+  { type: "number", keyName: 'number2', label: '2', keyPress: '2' },
+  { type: "number", keyName: 'number3', label: '3', keyPress: '3' },
+  { type: "number", keyName: 'number4', label: '4', keyPress: '4' },
+  { type: "number", keyName: 'number5', label: '5', keyPress: '5' },
+  { type: "number", keyName: 'number6', label: '6', keyPress: '6' },
+  { type: "number", keyName: 'number7', label: '7', keyPress: '7' },
+  { type: "number", keyName: 'number8', label: '8', keyPress: '8' },
+  { type: "number", keyName: 'number9', label: '9', keyPress: '9' },
+  { type: "number", keyName: 'number0', label: '0', keyPress: '0' },
+  { type: "dot", keyName: 'dot', label: '.', keyPress: '.' },
+  { type: "operation", keyName: 'add', label: '+', keyPress: '+' },
+  { type: "operation", keyName: 'subtract', label: '-', keyPress: '-' },
+  { type: "operation", keyName: 'multiply', label: '×', keyPress: '*' },
+  { type: "operation", keyName: 'divide', label: '/', keyPress: '/' },
+  { type: "operation", keyName: 'evaluate', label: '=', keyPress: 'Enter' },
+  { type: "operation", keyName: 'clear', label: 'c', keyPress: 'c' },
+  { type: "operation", keyName: 'delete', label: '←', keyPress: 'Backspace' },
 ];
 
-function Button({ keyName, label, onClick }) {
+const Button = forwardRef(function Button({ keyName, label, onClick }, ref) {
   return (
-    <button style={{ gridArea: keyName }} className={`button ${keyName}`} onMouseDown={onClick}>
+    <button
+      style={{ gridArea: keyName }}
+      className={`button ${keyName}`}
+      onClick={onClick}
+      ref={ref}
+    >
       {label}
     </button>
   );
-}
+})
 
 function Screen({ value }) {
   return (
@@ -39,6 +44,22 @@ function Screen({ value }) {
 
 export default function App() {
   const [query, setQuery] = useState([])
+
+  const buttonRefs = useRef({})
+
+  useEffect(() => {
+    const handleKeyDown = (event) => handleKeyPress(event.key)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const handleKeyPress = (key) => {
+    const buttonRef = buttonRefs.current[key];
+    if (buttonRef === undefined) {
+      return
+    }
+    buttonRef.click()
+  };
 
   const handleClick = ({type, keyName, label}) => {
     if (keyName === 'evaluate') {
@@ -113,8 +134,14 @@ export default function App() {
   return (
     <div className="calculator">
       <Screen value={stringifyResult()} />
-      {BUTTONS.map(({ type, keyName, label }) => (
-        <Button key={keyName} keyName={keyName} label={label} onClick={() => handleClick({ type, keyName, label })} />
+      {BUTTONS.map(({ type, keyName, label, keyPress }) => (
+        <Button
+          key={keyName}
+          keyName={keyName}
+          label={label}
+          onClick={() => handleClick({ type, keyName, label })}
+          ref={element => buttonRefs.current[keyPress] = element}
+        />
       ))}
     </div>
   );
